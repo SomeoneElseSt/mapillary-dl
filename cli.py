@@ -332,22 +332,22 @@ def main():
         epilog="""
 Examples:
   Interactive mode (recommended):
-    uv run python3 cli.py
+    mapillary-dl
 
   Non-interactive: specify city by name:
-    uv run python3 cli.py --city "New York"
+    mapillary-dl --city "New York"
 
   Non-interactive: custom bounding box:
-    uv run python3 cli.py --bbox "-74.05,40.68,-73.91,40.88"
+    mapillary-dl --bbox "-74.05,40.68,-73.91,40.88"
 
   Limit download for testing:
-    uv run python3 cli.py --city "San Francisco" --limit 50
+    mapillary-dl --city "San Francisco" --limit 50
 
   Specify output directory:
-    uv run python3 cli.py --output-dir data/sf_images
+    mapillary-dl --output-dir data/sf_images
 
   Show available cities:
-    uv run python3 cli.py --list-cities
+    mapillary-dl --list-cities
         """
     )
 

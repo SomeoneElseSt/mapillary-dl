@@ -1,3 +1,4 @@
 mapillary_dl.egg-info/
 dist/
 build/
+__pycache__/
