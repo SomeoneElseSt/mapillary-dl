@@ -2,6 +2,8 @@
 
 CLI tool to bulk-download street-level imagery from [Mapillary](https://www.mapillary.com/). Define a bounding box or pick a city, and it discovers and downloads every available image — with GPS embedded in EXIF, resumable downloads, and a SQLite cache that makes re-runs instant.
 
+> This tool was spun off from [CityZero](https://github.com/SomeoneElseSt/CityZero/tree/master/mapillary), where its original commit history can be found.
+
 ## Install
 
 ```bash
