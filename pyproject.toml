@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mapillary-dl"
+version = "0.1.0"
+description = "CLI tool to bulk-download street-level imagery from Mapillary"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [{ name = "Stiven", url = "https://stiven.me" }]
+
+[project.urls]
+Homepage = "https://github.com/SomeoneElseSt/mapillary-dl"
+dependencies = [
+    "folium>=0.17",
+    "mapillary>=1.0",
+    "piexif>=1.1",
+    "python-dotenv>=1.0",
+    "questionary>=2.0",
+    "requests>=2.31",
+    "tqdm>=4.66",
+]
+
+[project.scripts]
+mapillary-dl = "cli:main"
+
+[tool.setuptools]
+py-modules = ["cli", "config", "database", "downloader"]
