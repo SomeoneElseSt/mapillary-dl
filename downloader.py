@@ -92,6 +92,11 @@ class MapillaryClient:
         self.session = requests.Session()
         self.session.headers.update({"Authorization": f"OAuth {config.client_token}"})
 
+    def verify_token(self) -> bool:
+        """Ping the images endpoint to confirm the token is valid."""
+        response = self.session.get(f"{self.BASE_URL}/images", params={"bbox": "-122.5,37.7,-122.4,37.8", "limit": 1})
+        return response.status_code == 200
+
     def get_images_in_bbox(
         self,
         bbox: BoundingBox,

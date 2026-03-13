@@ -388,6 +388,17 @@ Examples:
             print(f"  {city.title():20} {bbox.to_tuple()}")
         return
 
+    config = get_mapillary_config()
+    if config is None:
+        print("❌ MAPILLARY_CLIENT_TOKEN not set. Export it and try again.")
+        print("   export MAPILLARY_CLIENT_TOKEN=MLY|...")
+        sys.exit(1)
+
+    _client = MapillaryClient(config)
+    if not _client.verify_token():
+        print("❌ Token is invalid or Mapillary API is unreachable. Check your token and try again.")
+        sys.exit(1)
+
     is_interactive = not (args.city or args.bbox)
 
     show_preview = is_interactive or args.preview
@@ -424,16 +435,7 @@ Examples:
     args.output_dir.mkdir(parents=True, exist_ok=True)
     print(f"📁 Output: {args.output_dir}")
 
-    config = get_mapillary_config()
-    if config is None:
-        print("\n❌ MAPILLARY_CLIENT_TOKEN not set.")
-        print("\nPlease ensure:")
-        print("1. .env file exists in project root")
-        print("2. MAPILLARY_CLIENT_TOKEN is set correctly")
-        print("3. Token format: MLY|numeric_id|hex_string")
-        sys.exit(1)
-
-    client = MapillaryClient(config)
+    client = _client
     downloader = ImageDownloader(client, output_dir=args.output_dir / "images")
     db = DiscoveryDB.get(args.output_dir / "images.db")
 
