@@ -49,7 +49,7 @@ def read_gps_exif(path: Path) -> "tuple[float, float] | None":
         return None
 
 
-def embed_gps_exif(path: Path, lat: float, lon: float) -> None:
+def embed_gps_exif(path: Path, lat: float, lon: float, altitude: float | None = None) -> None:
     """Write GPS coordinates into JPEG EXIF in-place without re-encoding."""
     def to_rational(deg: float) -> tuple:
         # Store as decimal degrees rational: (round(deg * precision), precision)
@@ -62,6 +62,9 @@ def embed_gps_exif(path: Path, lat: float, lon: float) -> None:
         piexif.GPSIFD.GPSLongitudeRef: b"E" if lon >= 0 else b"W",
         piexif.GPSIFD.GPSLongitude: to_rational(lon),
     }
+    if altitude is not None:
+        gps_ifd[piexif.GPSIFD.GPSAltitudeRef] = 0 if altitude >= 0 else 1
+        gps_ifd[piexif.GPSIFD.GPSAltitude] = (round(abs(altitude) * 100), 100)
     try:
         exif_data = piexif.load(str(path))
     except Exception:
@@ -79,6 +82,13 @@ def extract_lat_lon(img: Dict) -> tuple[float, float] | None:
     if len(coords) >= 2:
         return coords[1], coords[0]
     return None
+
+
+def extract_altitude(img: Dict) -> float | None:
+    """Extract computed_altitude from either DB format {altitude} or API format {computed_altitude}."""
+    if "altitude" in img:
+        return img["altitude"]
+    return img.get("computed_altitude")
 
 
 class MapillaryClient:
@@ -109,7 +119,7 @@ class MapillaryClient:
         params = {
             "bbox": f"{bbox.west},{bbox.south},{bbox.east},{bbox.north}",
             "limit": limit,
-            "fields": "id,geometry,captured_at,compass_angle,sequence,is_pano,altitude,camera_type,creator,height,width"
+            "fields": "id,geometry,captured_at,compass_angle,sequence,is_pano,computed_altitude,camera_type,creator,height,width"
         }
 
         if start_time:
@@ -293,9 +303,10 @@ class ImageDownloader:
                 continue
             lat_lon = extract_lat_lon(img)
             if lat_lon:
+                alt = extract_altitude(img)
                 if read_gps_exif(output_path) is None:
-                    embed_gps_exif(output_path, *lat_lon)
-                db.upsert_downloaded(img_id, *lat_lon)
+                    embed_gps_exif(output_path, *lat_lon, altitude=alt)
+                db.upsert_downloaded(img_id, *lat_lon, altitude=alt)
             else:
                 output_path.unlink()
                 remaining.append(img)
@@ -365,9 +376,10 @@ class ImageDownloader:
                     lat_lon = extract_lat_lon(img)
                     if lat_lon:
                         # Embed GPS if missing — use img coords (full precision, not EXIF round-trip)
+                        alt = extract_altitude(img)
                         if read_gps_exif(output_path) is None:
-                            embed_gps_exif(output_path, *lat_lon)
-                        db.upsert_downloaded(img_id, *lat_lon)
+                            embed_gps_exif(output_path, *lat_lon, altitude=alt)
+                        db.upsert_downloaded(img_id, *lat_lon, altitude=alt)
                         skipped_count += 1
                         completed += 1
                         continue
@@ -383,8 +395,9 @@ class ImageDownloader:
 
                 if success:
                     lat_lon = extract_lat_lon(img)
+                    alt = extract_altitude(img)
                     if lat_lon:
-                        embed_gps_exif(output_path, *lat_lon)
+                        embed_gps_exif(output_path, *lat_lon, altitude=alt)
                     db.mark_downloaded(img_id)
                     success_count += 1
                 else:

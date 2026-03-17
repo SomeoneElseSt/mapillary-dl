@@ -18,6 +18,7 @@ class DiscoveryDB:
             id            TEXT PRIMARY KEY,
             lat           REAL NOT NULL,
             lon           REAL NOT NULL,
+            altitude      REAL,
             downloaded    INTEGER NOT NULL DEFAULT 0,
             discovered_at INTEGER NOT NULL,
             downloaded_at INTEGER
@@ -55,16 +56,17 @@ class DiscoveryDB:
                 continue
             lat = round(coords[1] * GPS_COORD_PRECISION) / GPS_COORD_PRECISION
             lon = round(coords[0] * GPS_COORD_PRECISION) / GPS_COORD_PRECISION
-            rows.append((img_id, lat, lon, now))
+            altitude = img.get("computed_altitude")
+            rows.append((img_id, lat, lon, altitude, now))
         self.conn.executemany(
-            "INSERT OR IGNORE INTO images (id, lat, lon, discovered_at) VALUES (?, ?, ?, ?)",
+            "INSERT OR IGNORE INTO images (id, lat, lon, altitude, discovered_at) VALUES (?, ?, ?, ?, ?)",
             rows,
         )
         self.conn.commit()
 
-    def upsert_downloaded(self, image_id: str, lat: float, lon: float) -> None:
+    def upsert_downloaded(self, image_id: str, lat: float, lon: float, altitude: float | None = None) -> None:
         """Insert image if not present, then mark as downloaded."""
-        self.insert_images([{"id": image_id, "geometry": {"coordinates": [lon, lat]}}])
+        self.insert_images([{"id": image_id, "geometry": {"coordinates": [lon, lat]}, "computed_altitude": altitude}])
         self.mark_downloaded(image_id)
 
     def mark_downloaded(self, image_id: str) -> None:
@@ -76,8 +78,8 @@ class DiscoveryDB:
         self.conn.commit()
 
     def get_pending_images_metadata(self) -> list[dict]:
-        cursor = self.conn.execute("SELECT id, lat, lon FROM images WHERE downloaded=0")
-        return [{"id": r[0], "lat": r[1], "lon": r[2]} for r in cursor.fetchall()]
+        cursor = self.conn.execute("SELECT id, lat, lon, altitude FROM images WHERE downloaded=0")
+        return [{"id": r[0], "lat": r[1], "lon": r[2], "altitude": r[3]} for r in cursor.fetchall()]
 
     def get_pending_count(self) -> int:
         cursor = self.conn.execute("SELECT COUNT(*) FROM images WHERE downloaded=0")
