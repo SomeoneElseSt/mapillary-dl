@@ -192,7 +192,7 @@ def show_download_summary(
     max_images: int = None,
     is_interactive: bool = True,
     show_preview: bool = True,
-) -> tuple[bool, list[dict]]:
+) -> tuple[bool, list[dict], bool]:
     """Determine images to download and show summary before download.
 
     Args:
@@ -200,9 +200,12 @@ def show_download_summary(
         save_to_db: Whether to persist discovered images to DB.
 
     Returns:
-        (confirmed, pending_images)
+        (confirmed, pending_images, user_cancelled). When confirmed is False,
+        user_cancelled is True only if the user declined the download prompt.
     """
     print(f"\n📊 Analyzing {location_name}...")
+
+    discovered: list[dict] | None = None
 
     if state == "rediscover":
         db.wipe_images()
@@ -228,11 +231,33 @@ def show_download_summary(
         pending_raw = db.get_pending_images_metadata()
 
     if not pending_raw:
+        if is_interactive:
+            hint = "Increase granularity when prompted to search more cells"
+        else:
+            hint = "Increase --granularity to search more cells"
+
+        custom_bbox_tip = (
+            ", or consider making your search area bigger"
+            if location_name == "Custom Area"
+            else ""
+        )
+
         if db.get_image_count() > 0:
             print("✓ All images already downloaded!")
+        elif state in ("merge", "rediscover") and discovered is not None and len(discovered) == 0:
+            print(
+                f"\nNo images were found at the current granularity. {hint}{custom_bbox_tip}.\n"
+            )
+        elif state in ("merge", "rediscover") and discovered is not None and len(discovered) > 0:
+            print(
+                f"\n✓ All images from this discovery pass are already downloaded. {hint}{custom_bbox_tip}.\n"
+            )
         else:
-            print("❌ No images found in existing database. Consider running with --state rediscover.")
-        return False, []
+            print(
+                f"\nNo images found in existing database. Consider running with --state rediscover"
+                f"{custom_bbox_tip}.\n"
+            )
+        return False, [], False
 
     # Delete old disk images before reconcile so reconcile sees a clean slate
     if state == "rediscover":
@@ -283,7 +308,7 @@ def show_download_summary(
         default=True,
     ))
 
-    return bool(proceed), pending
+    return bool(proceed), pending, not bool(proceed)
 
 
 def prompt_granularity() -> int:
@@ -514,11 +539,12 @@ Examples:
         downloader.grid = granularity_to_grid_params(granularity)
         print(f"🔬 Granularity: {granularity}/{GRANULARITY_MAX} (grid={downloader.grid.grid_cell_size}°, min={downloader.grid.min_cell_size}°)")
 
-    confirmed, pending_images = show_download_summary(
+    confirmed, pending_images, user_cancelled = show_download_summary(
         downloader, bbox, location_name, db, state, save_to_db, args.limit, is_interactive, show_preview
     )
     if not confirmed:
-        print("\nCancelled by user.")
+        if user_cancelled:
+            print("\nCancelled by user.")
         sys.exit(0)
 
     try:

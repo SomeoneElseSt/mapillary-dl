@@ -294,7 +294,7 @@ class ImageDownloader:
                         pbar.update(update_interval)
                 pbar.update(pbar.total - pbar.n)
 
-        print(f"\n✓ Found {len(all_images)} unique images")
+        print(f"\n✓ Found {len(all_images)} images")
         return all_images
 
     def reconcile_disk_images(self, images: List[Dict], db: DiscoveryDB) -> List[Dict]:

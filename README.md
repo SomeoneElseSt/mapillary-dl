@@ -2,7 +2,7 @@
 
 ![CityZero city selection screen](public/example-1.png)
 
-CLI tool to bulk-download street-level imagery from [Mapillary](https://www.mapillary.com/). Define a bounding box or pick a city, and it discovers and downloads every available image — with GPS embedded in EXIF, resumable downloads, and a SQLite cache that makes re-runs instant.
+CLI tool to bulk-download street-level imagery from [Mapillary](https://www.mapillary.com/) fast. You can define a bounding box or pick a city, and it discovers and downloads every available image of that area, with GPS embedded in EXIF, resumable downloads, and a SQLite-based cache for easy re-runs and fault resistance to interruptions.
 
 > This tool was spun off from [CityZero](https://github.com/SomeoneElseSt/CityZero/tree/master/mapillary), where its original commit history can be found.
 
@@ -14,7 +14,7 @@ pip install mapillary-dl
 
 ## Setup
 
-Get a client token from [mapillary.com/dashboard/developers](https://www.mapillary.com/dashboard/developers) and export it:
+You'll need to get a client token from [mapillary.com/dashboard/developers](https://www.mapillary.com/dashboard/developers) and export it:
 
 ```bash
 export MAPILLARY_CLIENT_TOKEN=MLY|...
