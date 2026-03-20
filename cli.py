@@ -466,7 +466,11 @@ Examples:
         print("❌ Token is invalid or Mapillary API is unreachable. Check your token and try again.")
         sys.exit(1)
 
-    is_interactive = not (args.city or args.bbox)
+    explicit_location = bool(args.city or args.bbox)
+    is_interactive = not explicit_location
+    tty = sys.stdin.isatty() and sys.stdout.isatty()
+    # With --city/--bbox from a real terminal, still offer discovery-state / granularity prompts.
+    prompt_with_explicit_location = explicit_location and tty
 
     show_preview = is_interactive or args.preview
 
@@ -519,7 +523,7 @@ Examples:
 
     db_has_data = db.get_image_count() > 0
     if db_has_data:
-        if is_interactive:
+        if is_interactive or (prompt_with_explicit_location and args.state is None):
             warn_if_stale(db)
             state = prompt_discovery_state()
         else:
@@ -530,17 +534,32 @@ Examples:
     else:
         state = "rediscover"
         save_to_db = not args.no_save_discovery
-        if is_interactive:
+        if is_interactive or prompt_with_explicit_location:
             if not ask_or_exit(questionary.confirm("Proceed with discovery?", default=True)):
                 sys.exit(0)
 
     if state != "maintain":
-        granularity = prompt_granularity() if is_interactive else args.granularity
+        granularity = (
+            prompt_granularity()
+            if (is_interactive or prompt_with_explicit_location)
+            and not any(
+                a == "--granularity" or a.startswith("--granularity=") for a in sys.argv
+            )
+            else args.granularity
+        )
         downloader.grid = granularity_to_grid_params(granularity)
         print(f"🔬 Granularity: {granularity}/{GRANULARITY_MAX} (grid={downloader.grid.grid_cell_size}°, min={downloader.grid.min_cell_size}°)")
 
     confirmed, pending_images, user_cancelled = show_download_summary(
-        downloader, bbox, location_name, db, state, save_to_db, args.limit, is_interactive, show_preview
+        downloader,
+        bbox,
+        location_name,
+        db,
+        state,
+        save_to_db,
+        args.limit,
+        is_interactive or prompt_with_explicit_location,
+        show_preview,
     )
     if not confirmed:
         if user_cancelled:

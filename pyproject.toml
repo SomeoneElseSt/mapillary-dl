@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mapillary-dl"
-version = "0.1.8"
+version = "0.1.9"
 description = "CLI tool to bulk-download street-level imagery from Mapillary"
 readme = "README.md"
 license = "MIT"
