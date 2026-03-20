@@ -463,7 +463,9 @@ Examples:
 
     config = get_mapillary_config()
     if config is None:
-        print("❌ MAPILLARY_CLIENT_TOKEN not set. Export it with 'export MAPILLARY_CLIENT_TOKEN=MLY|...' and try again.")
+        print("❌ MAPILLARY_CLIENT_TOKEN not set. Set it and try again:")
+        print("   macOS/Linux: export MAPILLARY_CLIENT_TOKEN=MLY|...")
+        print('   Windows CMD: set "MAPILLARY_CLIENT_TOKEN=MLY|..."')
         print("   Get your token here: https://www.mapillary.com/dashboard/developers")
         sys.exit(1)
 

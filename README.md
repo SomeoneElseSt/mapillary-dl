@@ -14,10 +14,18 @@ pip install cityzero
 
 ## Setup
 
-You'll need to get a client token from [mapillary.com/dashboard/developers](https://www.mapillary.com/dashboard/developers) and export it:
+You'll need to get a client token from [mapillary.com/dashboard/developers](https://www.mapillary.com/dashboard/developers) and set it in your environment:
+
+**macOS / Linux**
 
 ```bash
 export MAPILLARY_CLIENT_TOKEN=MLY|...
+```
+
+**Windows CMD**
+
+```bat
+set "MAPILLARY_CLIENT_TOKEN=MLY|..."
 ```
 
 ## Usage
